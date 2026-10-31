@@ -1,7 +1,7 @@
 package binhjeremy.bankappspringcore.controller;
 
 import binhjeremy.bankappspringcore.config.JwtUtil;
-import binhjeremy.bankappspringcore.models.DTO.LoginRequest;
+import binhjeremy.bankappspringcore.models.DTO.Login.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;

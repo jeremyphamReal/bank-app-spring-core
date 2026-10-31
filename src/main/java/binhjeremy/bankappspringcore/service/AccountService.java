@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -92,27 +93,33 @@ public class AccountService implements UserDetailsService {
         return Arrays.asList(new SimpleGrantedAuthority("User"));
     }
 
-    public void transfer(Account from, String toUsername, BigDecimal amount) {
-        if(from.getBalance().compareTo(amount) <= 0){
+    @Transactional
+    public Account transfer(String fromUsername, String toUsername, BigDecimal amount) {
+        Account fromAccount = accountRepo.findByUsername(fromUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("Deposit account does not exist"));
+
+        Account toAccount = accountRepo.findByUsername(toUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("Receiving account does not exist"));
+
+        if(fromAccount.getBalance().compareTo(amount) <= 0){
             throw new RuntimeException("Insufficient funds");
         }
-        Account toAccount = accountRepo.findByUsername(toUsername).
-                orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+        toAccount.setBalance(toAccount.getBalance().add(amount));
 
-        from.setBalance(from.getBalance().subtract(amount));
-        accountRepo.save(from);
-
-        toAccount.setBalance(toAccount.getBalance().subtract(amount));
+        accountRepo.save(fromAccount);
         accountRepo.save(toAccount);
 
         Transaction debitTransaction = new Transaction(
-                amount, "transfer out to"+ toAccount.getUsername(), LocalDateTime.now(), from
+                amount, "Chuyển tiền đến " + toAccount.getUsername(), LocalDateTime.now(), fromAccount
         );
         transactionRepo.save(debitTransaction);
 
         Transaction creditTransaction = new Transaction(
-                amount, "transfer in to"+ from.getUsername(), LocalDateTime.now(), toAccount
+                amount, "Nhận tiền từ " + fromAccount.getUsername(), LocalDateTime.now(), toAccount
         );
         transactionRepo.save(creditTransaction);
+
+        return fromAccount;
     }
 }

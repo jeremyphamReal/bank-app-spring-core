@@ -1,4 +1,4 @@
-package binhjeremy.bankappspringcore.models.DTO;
+package binhjeremy.bankappspringcore.models.DTO.Login;
 
 public record  LoginRequest(
         String username,
