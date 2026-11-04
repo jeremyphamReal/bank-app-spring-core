@@ -33,12 +33,12 @@ public class AccountService implements UserDetailsService {
     private TransactionRepo transactionRepo;
 
     public Account findAccountByName(String username){
-        return accountRepo.findByUsername(username)
+        return accountRepo.findByUsernameWithLock(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
     }
 
     public Account registerAccount(String username, String password) {
-        if(accountRepo.findByUsername(username).isPresent()){
+        if(accountRepo.findByUsernameWithLock(username).isPresent()){
             throw new UsernameNotFoundException("Username already exists");
         }
         Account account = new Account();
@@ -77,6 +77,7 @@ public class AccountService implements UserDetailsService {
     }
 
     @Override
+    @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = findAccountByName(username);
         if(account == null){
@@ -95,10 +96,10 @@ public class AccountService implements UserDetailsService {
 
     @Transactional
     public Account transfer(String fromUsername, String toUsername, BigDecimal amount) {
-        Account fromAccount = accountRepo.findByUsername(fromUsername)
+        Account fromAccount = accountRepo.findByUsernameWithLock(fromUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("Deposit account does not exist"));
 
-        Account toAccount = accountRepo.findByUsername(toUsername)
+        Account toAccount = accountRepo.findByUsernameWithLock(toUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("Receiving account does not exist"));
 
         if(fromAccount.getBalance().compareTo(amount) <= 0){

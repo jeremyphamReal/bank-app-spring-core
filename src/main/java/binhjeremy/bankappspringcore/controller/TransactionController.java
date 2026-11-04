@@ -6,7 +6,7 @@ import binhjeremy.bankappspringcore.models.DTO.response.ApiResponse;
 import binhjeremy.bankappspringcore.models.DTO.response.TransferResponse;
 import binhjeremy.bankappspringcore.service.AccountService;
 import jakarta.validation.Valid;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,7 +27,7 @@ public class TransactionController {
     public ResponseEntity<ApiResponse> transfer(
             @RequestBody @Valid TransferRequest transferRequest,
             Authentication authencation) {
-        String username = authencation.name();
+        String username = authencation.getName();
 
         Account updateAccount = accountService.transfer(username, transferRequest.toUsername(), transferRequest.amount());
 

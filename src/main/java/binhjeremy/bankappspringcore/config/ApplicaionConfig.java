@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 public class ApplicaionConfig {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(10);
     }
 }

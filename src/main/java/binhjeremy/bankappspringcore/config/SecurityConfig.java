@@ -46,11 +46,29 @@ public class SecurityConfig {
     }
     @Bean
     public SecurityFilterChain  securityFilterChain(HttpSecurity httpSecurity) throws Exception{
-        httpSecurity.csrf(Customizer -> Customizer.disable());
-        httpSecurity.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        httpSecurity.csrf(csrf -> csrf.disable());
+        httpSecurity.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(formLogin -> formLogin.disable())
+                .httpBasic(httpBasicAuth -> httpBasicAuth.disable())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized - Chưa đăng nhập hoặc token sai\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Forbidden - Không có quyền truy cập\"}");
+                        })
+                );
+
 
         httpSecurity.authorizeHttpRequests(request -> request
-                .requestMatchers("/api/v1/auth/login").permitAll());
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/transactions/transfer").permitAll()
+                .anyRequest().authenticated());
 
         httpSecurity.authenticationProvider(authenticationProvider());
         httpSecurity.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -61,8 +79,4 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Autowired
-    public void configGlobal(AuthenticationManagerBuilder auth) throws Exception{
-        auth.userDetailsService(accountService).passwordEncoder(passwordEncoder);
-    }
 }
