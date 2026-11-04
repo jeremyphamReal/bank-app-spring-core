@@ -32,11 +32,17 @@ public class AccountService implements UserDetailsService {
     @Autowired
     private TransactionRepo transactionRepo;
 
+    @Transactional(readOnly = true)
     public Account findAccountByName(String username){
-        return accountRepo.findByUsernameWithLock(username)
+        return accountRepo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
     }
 
+    @Transactional
+    public Account findAccountWithLock(String username) {
+        return accountRepo.findByUsernameWithLock(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+    }
     public Account registerAccount(String username, String password) {
         if(accountRepo.findByUsernameWithLock(username).isPresent()){
             throw new UsernameNotFoundException("Username already exists");
@@ -46,6 +52,19 @@ public class AccountService implements UserDetailsService {
         account.setPassword(passwordEncoder.encode(password));
         account.setBalance(BigDecimal.ZERO);
         return accountRepo.save(account);
+    }
+
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        Account account = accountRepo.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+        if(!passwordEncoder.matches(oldPassword, account.getPassword())){
+            throw new IllegalArgumentException("Old password does not match");
+        }
+        if(passwordEncoder.matches(newPassword, account.getPassword())){
+            throw new IllegalArgumentException("New password does not match old password");
+        }
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepo.save(account);
     }
 
     public void deposit(Account account, BigDecimal amount) {

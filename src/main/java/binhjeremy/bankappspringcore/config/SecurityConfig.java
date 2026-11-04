@@ -68,6 +68,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/transactions/transfer").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/accounts/**").permitAll()
                 .anyRequest().authenticated());
 
         httpSecurity.authenticationProvider(authenticationProvider());
