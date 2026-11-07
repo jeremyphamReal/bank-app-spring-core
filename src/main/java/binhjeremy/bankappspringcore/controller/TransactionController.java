@@ -44,8 +44,8 @@ public class TransactionController {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<ApiResponse<AccountResponse>> deposit(@RequestBody @Valid AmountRequest amountRequest, Authentication authencation) {
-        String username = authencation.getName();
+    public ResponseEntity<ApiResponse<AccountResponse>> deposit(@RequestBody @Valid AmountRequest amountRequest, Authentication authentication) {
+        String username = authentication.getName();
         Account updateAccount = accountService.deposit(username, amountRequest.amount());
 
         AccountResponse response = new AccountResponse(
@@ -58,8 +58,8 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<ApiResponse<AccountResponse>> withdraw(@RequestBody @Valid AmountRequest amountRequest, Authentication authencation) {
-        String username = authencation.getName();
+    public ResponseEntity<ApiResponse<AccountResponse>> withdraw(@RequestBody @Valid AmountRequest amountRequest, Authentication authentication) {
+        String username = authentication.getName();
         Account updateAccount = accountService.withdraw(username, amountRequest.amount());
 
         AccountResponse response = new AccountResponse(

@@ -87,7 +87,7 @@ public class AccountService implements UserDetailsService {
     public Account withdraw(String username, BigDecimal amount) {
         Account account = findAccountWithLock(username);
         if(account.getBalance().compareTo(amount) < 0){
-            throw new RuntimeException("Insufficient funds");
+            throw new IllegalStateException("Insufficient funds");
         }
         account.setBalance(account.getBalance().subtract(amount));
 
