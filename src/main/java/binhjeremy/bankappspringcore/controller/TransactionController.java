@@ -1,7 +1,9 @@
 package binhjeremy.bankappspringcore.controller;
 
 import binhjeremy.bankappspringcore.models.Account;
+import binhjeremy.bankappspringcore.models.DTO.request.AmountRequest;
 import binhjeremy.bankappspringcore.models.DTO.request.TransferRequest;
+import binhjeremy.bankappspringcore.models.DTO.response.AccountResponse;
 import binhjeremy.bankappspringcore.models.DTO.response.ApiResponse;
 import binhjeremy.bankappspringcore.models.DTO.response.TransferResponse;
 import binhjeremy.bankappspringcore.service.AccountService;
@@ -39,5 +41,33 @@ public class TransactionController {
                 LocalDateTime.now());
 
         return ResponseEntity.ok(ApiResponse.success(response, "Chuyển khoản thành công"));
+    }
+
+    @PostMapping("/deposit")
+    public ResponseEntity<ApiResponse<AccountResponse>> deposit(@RequestBody @Valid AmountRequest amountRequest, Authentication authencation) {
+        String username = authencation.getName();
+        Account updateAccount = accountService.deposit(username, amountRequest.amount());
+
+        AccountResponse response = new AccountResponse(
+                updateAccount.getId(),
+                updateAccount.getUsername(),
+                updateAccount.getBalance()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(response, "Nạp tiền thành công"));
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<ApiResponse<AccountResponse>> withdraw(@RequestBody @Valid AmountRequest amountRequest, Authentication authencation) {
+        String username = authencation.getName();
+        Account updateAccount = accountService.withdraw(username, amountRequest.amount());
+
+        AccountResponse response = new AccountResponse(
+                updateAccount.getId(),
+                updateAccount.getUsername(),
+                updateAccount.getBalance()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(response, "Rút tiền thành công"));
     }
 }

@@ -1,6 +1,7 @@
 package binhjeremy.bankappspringcore.service;
 
 import binhjeremy.bankappspringcore.models.Account;
+import binhjeremy.bankappspringcore.models.DTO.TransactionType;
 import binhjeremy.bankappspringcore.models.Transaction;
 import binhjeremy.bankappspringcore.repository.AccountRepo;
 import binhjeremy.bankappspringcore.repository.TransactionRepo;
@@ -67,28 +68,35 @@ public class AccountService implements UserDetailsService {
         accountRepo.save(account);
     }
 
-    public void deposit(Account account, BigDecimal amount) {
+    @Transactional
+    public Account deposit(String username, BigDecimal amount) {
+
+        Account account = findAccountWithLock(username);
         account.setBalance(account.getBalance().add(amount));
-        accountRepo.save(account);
 
         Transaction transaction = new Transaction(
-                amount, "deposit", LocalDateTime.now(), account
+                amount, TransactionType.DEPOSIT, LocalDateTime.now(), account
         );
 
         transactionRepo.save(transaction);
+
+        return accountRepo.save(account);
     }
 
-    public void withdraw(Account account, BigDecimal amount) {
-        if(account.getBalance().compareTo(amount) <= 0){
+    @Transactional
+    public Account withdraw(String username, BigDecimal amount) {
+        Account account = findAccountWithLock(username);
+        if(account.getBalance().compareTo(amount) < 0){
             throw new RuntimeException("Insufficient funds");
         }
         account.setBalance(account.getBalance().subtract(amount));
-        accountRepo.save(account);
 
         Transaction transaction = new Transaction(
-                amount, "withdraw", LocalDateTime.now(), account
+                amount, TransactionType.WITHDRAW, LocalDateTime.now(), account
         );
         transactionRepo.save(transaction);
+
+        return accountRepo.save(account);
     }
 
     public List<Transaction> getTransactions(Account account) {
@@ -121,7 +129,7 @@ public class AccountService implements UserDetailsService {
         Account toAccount = accountRepo.findByUsernameWithLock(toUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("Receiving account does not exist"));
 
-        if(fromAccount.getBalance().compareTo(amount) <= 0){
+        if(fromAccount.getBalance().compareTo(amount) < 0){
             throw new RuntimeException("Insufficient funds");
         }
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
@@ -131,12 +139,12 @@ public class AccountService implements UserDetailsService {
         accountRepo.save(toAccount);
 
         Transaction debitTransaction = new Transaction(
-                amount, "Chuyển tiền đến " + toAccount.getUsername(), LocalDateTime.now(), fromAccount
+                amount, TransactionType.TRANSFER_OUT, LocalDateTime.now(), fromAccount
         );
         transactionRepo.save(debitTransaction);
 
         Transaction creditTransaction = new Transaction(
-                amount, "Nhận tiền từ " + fromAccount.getUsername(), LocalDateTime.now(), toAccount
+                amount, TransactionType.TRANSFER_IN, LocalDateTime.now(), toAccount
         );
         transactionRepo.save(creditTransaction);
 
