@@ -20,6 +20,7 @@ public class Transaction {
     private Long id;
     private BigDecimal amount;
     @Enumerated(EnumType.STRING)
+    @Column(name = "type")
     private TransactionType type;
     private LocalDateTime dateTime;
 

@@ -2,10 +2,14 @@ package binhjeremy.bankappspringcore.service;
 
 import binhjeremy.bankappspringcore.models.Account;
 import binhjeremy.bankappspringcore.models.DTO.TransactionType;
+import binhjeremy.bankappspringcore.models.DTO.response.TransactionResponse;
 import binhjeremy.bankappspringcore.models.Transaction;
 import binhjeremy.bankappspringcore.repository.AccountRepo;
 import binhjeremy.bankappspringcore.repository.TransactionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -99,8 +103,15 @@ public class AccountService implements UserDetailsService {
         return accountRepo.save(account);
     }
 
-    public List<Transaction> getTransactions(Account account) {
-        return transactionRepo.findByAccountId(account.getId());
+    public Page<TransactionResponse> getTransactionHistory(String username, int page, int size){
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Transaction> transactionPage = transactionRepo.findByAccountUsernameOrderByDateTimeDesc(username, pageable);
+        return transactionPage.map(tx -> new  TransactionResponse(
+                tx.getId(),
+                tx.getAmount(),
+                tx.getType(),
+                tx.getDateTime()
+        ));
     }
 
     @Override

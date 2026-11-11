@@ -5,15 +5,15 @@ import binhjeremy.bankappspringcore.models.DTO.request.AmountRequest;
 import binhjeremy.bankappspringcore.models.DTO.request.TransferRequest;
 import binhjeremy.bankappspringcore.models.DTO.response.AccountResponse;
 import binhjeremy.bankappspringcore.models.DTO.response.ApiResponse;
+import binhjeremy.bankappspringcore.models.DTO.response.TransactionResponse;
 import binhjeremy.bankappspringcore.models.DTO.response.TransferResponse;
 import binhjeremy.bankappspringcore.service.AccountService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -69,5 +69,16 @@ public class TransactionController {
         );
 
         return ResponseEntity.ok(ApiResponse.success(response, "Rút tiền thành công"));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<ApiResponse<Page>> history(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        String username = authentication.getName();
+        Page<TransactionResponse> history =  accountService.getTransactionHistory(username, page, size);
+
+        return ResponseEntity.ok(ApiResponse.success(history));
     }
 }
